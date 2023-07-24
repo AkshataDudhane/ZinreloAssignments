@@ -83,7 +83,11 @@ class User:
 
     def val_weekday(self):
         weekday=datetime.strptime(self.birthday, '%m/%d/%Y') #converting weekday to a datetime object and matching the date format
-        return weekday.weekday()!=0 or weekday.day>7
+        return weekday.weekday()!=0 or weekday.day>7 #weekday() method returns a datetime object with the day of the week as an integer so according to our condition 0 is represented as monday (1 as tuesday... 6 as sunday) and weekday>7 to check if value is greater than 7 i.e this checks if day of week is not a=monday.
+#so it returns true if either of the condition is holds true or else returns false.
+#for example: if someone is born on 3rd of july 2023(which is the first Monday of the month) the weekday method will return False as the method will return it as 0 which is not valid and hence we will get the output as False
+#similarly, if someone is born on 4th of july 2023(which is tuesday) it will be returned as True.
+
 
     #4) writing a function for email validation
     def check_email(self):
@@ -98,74 +102,10 @@ class User:
         birth=datetime.strptime(self.birthday, '%m/%d/%Y')
         today = date.today()
         age = today.year - birth.year
-        if(today.month<birth.month or (today.month==birth.month and today.day<birth.day)):
+        if(today.month<birth.month or (today.month==birth.month and today.day<birth.day)): #here we just check if the person has not yet celebrated their birthday in the current year. again in this case we needs to consider 2 conditions if the person is born in august of 2023 and currently it is july of 2023 the person's birthday has not occured yet or we need to check if person is born on 29th of july and currently it is 24th of july then also the person has not yet born so for such particular individual we need to recalculate his/her age by performing age-1 and if any of the conditions holds false we just return and check if person is >=21 and return it.
             age-=1
         return age>=21
-
-    # def to_dict(self):
-    #         return {
-    #             'ID': self.id
-    #         }
 if __name__ == '__main__':
     acmewines_order = AcmewinesOrder()
     acmewines_order.processfile()
-    acmewines_order.write()      
-
-
-#old Portion
-#writing a function for : No wine can ship to New Jersey, Connecticut, Pennsylvania, Massachusetts, Illinois, Idaho or Oregon
-# def check_state(state):
-#     if state not in ['NJ','CT','PA','MA','IL','ID','OR']:
-#         return True
-#     else:
-#         return False
-    
-
-# #2)writing the function for: Wine can not ship to any zipcode that has two consecutive numbers next to each other
-
-
-# #it takes zipcode as an input and converts it into a string.
-# def check_zip(zipcode):
-#     zip_str=str(zipcode)
-#     for i in range(len(zip_str)-1): #iterating through the characters
-#         if (int(zip_str[i])+1==int(zip_str[i+1]) or int(zip_str[i+1])+1==int(zip_str[i])): #checking if the current character and next character if find return true else false
-#             return True
-#     return False
-
-# #reverses the check_zip condition by using NOT(true if zip does not have consecutive nos and false otherwise).
-# def val_zip(zipcode):
-#      return not check_zip(zipcode)
-
-# #3) writing a function to return wine not sold to anyone born on the first Monday of the month.
-
-# def val_weekday(weekday):
-#     weekday=datetime.strptime(weekday, '%m/%d/%Y') #converting weekday to a datetime object and matching the date format
-#     return weekday.weekday()!=0 or weekday.day>7
-
-# #4) writing a function for email validation
-# def check_email(email):
-#     pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b' #regular expression
-#     if re.fullmatch(pattern, email): #match the entire input string against the regular expression 
-#         return True
-#     else:
-#         return False
-
-# #21 years 
-# def calculateAge(dob):
-#     birth=datetime.strptime(dob, '%m/%d/%Y')
-#     today = date.today()
-#     age = today.year - birth.year
-#     if(today.month<birth.month or (today.month==birth.month and today.day<birth.day)):
-#         age-=1
-#     return age>=21
-
-
-
-# valid_states = df[(df['State'].apply(check_state)) & (df['ZipCode'].apply(val_zip)) & (df['Email'].apply(check_email)) & (df['Birthday'].apply(calculateAge)) & (df['Birthday'].apply(val_weekday))]
-# valid_states.to_csv('valid_states.csv')
-# invalid_states = df[~((df['State'].apply(check_state)) & (df['ZipCode'].apply(val_zip)) & (df['Email'].apply(check_email)) & (df['Birthday'].apply(calculateAge)) & (df['Birthday'].apply(val_weekday)))]
-# invalid_states.to_csv('invalid_states.csv')
-
-# # Print the filtered wines
-# print("\nThe valid states are:",valid_states[['ID', 'Name', 'Email','State','ZipCode','Birthday']])
-# print("\nInvalid states are:",invalid_states[['ID', 'Name', 'Email','State','ZipCode','Birthday']])
+    acmewines_order.write() 
