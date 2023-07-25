@@ -5,10 +5,6 @@ import calendar
 import csv
  
 
- #read orders
-#df.info() #print information
-#print(df.head()) #print first 5 columns of the order list
-#print(df.tail()) #print last 5 columns of the order list
 
 class AcmewinesOrder:
     def __init__(self):
@@ -23,12 +19,6 @@ class AcmewinesOrder:
             else:
                 self.invalid_orders.append(order)
 
-        ###################### write to file #################
-        # valid_df = pd.DataFrame([order.to_dict() for order in valid_orders])
-        # invalid_df = pd.DataFrame([order.to_dict() for order in invalid_orders])
-        
-        # valid_df.to_csv('valid_orders.csv', index=False)
-        # invalid_df.to_csv('invalid_orders.csv', index=False)
     def write(self):
         with open('valid_orders.csv', 'w', newline='') as valid:
             writer = csv.writer(valid)
@@ -83,15 +73,13 @@ class User:
 
     def val_weekday(self):
         weekday=datetime.strptime(self.birthday, '%m/%d/%Y') #converting weekday to a datetime object and matching the date format
-        return weekday.weekday()!=0 or weekday.day>7 #weekday() method returns a datetime object with the day of the week as an integer so according to our condition 0 is represented as monday (1 as tuesday... 6 as sunday) and weekday>7 to check if value is greater than 7 i.e this checks if day of week is not a=monday.
-#so it returns true if either of the condition is holds true or else returns false.
-#for example: if someone is born on 3rd of july 2023(which is the first Monday of the month) the weekday method will return False as the method will return it as 0 which is not valid and hence we will get the output as False
-#similarly, if someone is born on 4th of july 2023(which is tuesday) it will be returned as True.
+        return weekday.weekday()!=0 or weekday.day>7
+    #returns true if the particular day is not the first monday(0) or day should be greater than 7.
 
 
     #4) writing a function for email validation
     def check_email(self):
-        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b' #regular expression
+        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b' #regex pattern
         if re.fullmatch(pattern, self.email): #match the entire input string against the regular expression 
             return True
         else:
@@ -102,8 +90,13 @@ class User:
         birth=datetime.strptime(self.birthday, '%m/%d/%Y')
         today = date.today()
         age = today.year - birth.year
-        if(today.month<birth.month or (today.month==birth.month and today.day<birth.day)): #here we just check if the person has not yet celebrated their birthday in the current year. again in this case we needs to consider 2 conditions if the person is born in august of 2023 and currently it is july of 2023 the person's birthday has not occured yet or we need to check if person is born on 29th of july and currently it is 24th of july then also the person has not yet born so for such particular individual we need to recalculate his/her age by performing age-1 and if any of the conditions holds false we just return and check if person is >=21 and return it.
+        if(today.month<birth.month or (today.month==birth.month and today.day<birth.day)):
+            '''to check if person's is birth month or date falls after the current month or date
+            if birth year=2002 age will be considered as 21.
+            if birthday is on 26th july 2023, present month=birth month and present date(25)<birth date(26)
+            '''
             age-=1
+            #we need to subtract age by 1 so actual age will be 20
         return age>=21
 if __name__ == '__main__':
     acmewines_order = AcmewinesOrder()
