@@ -40,7 +40,7 @@ class Order:
 
                 
 class User:
-    def __init__(self, name, birthday, email, state, zipcode):
+    def __init__(self,name, birthday, email, state, zipcode):
 
         self.name = name
         self.birthday = birthday
