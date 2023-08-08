@@ -1,10 +1,47 @@
 import pandas as pd 
 import re
 from datetime import datetime, date, timedelta
-import calendar
 import csv
- 
+from mongoengine import *
+from mongoengine import connect
 
+
+#Create the MongoDB model
+class User_db(Document):
+    order_id = StringField(primary_key=True)
+    name = StringField()
+    birthday = DateTimeField()
+    email = StringField()
+    state = StringField()
+    zipcode = StringField()
+    valid_orders=BooleanField()
+
+# Read the CSV file and create instances of the model
+class Insertion:
+    def read_csv_and_save_to_mongodb(self):
+        with open('orders.csv', 'r', encoding='utf-8-sig') as file:
+            csv_reader = csv.DictReader(file)
+            for row in csv_reader:
+                order_id=row['ID']
+                name = row['Name']
+                birthday = datetime.strptime(row['Birthday'], '%m/%d/%Y')
+                email = row['Email']
+                state = row['State']
+                zipcode = row['ZipCode']
+
+                user = User_db(id=order_id, name=name, birthday=birthday, email=email, state=state, zipcode=zipcode)
+                User_db.save(user)
+class Update_db:
+    def update(self):
+        user=User_db.objects
+
+        for i in user:
+            up_order=Order(i.order_id,i.name,i.birthday,i.email,i.state,i.zipcode)
+            i.valid_orders=up_order.validate_order()
+            if(i.valid_orders):
+                User_db.objects(order_id=i.order_id).update(set__valid_orders=True)
+            else:
+                User_db.objects(order_id=i.order_id).update(set__valid_orders=False)
 
 class AcmewinesOrder:
     def __init__(self):
@@ -13,12 +50,11 @@ class AcmewinesOrder:
         self.invalid_orders = []
     def processfile(self):
         for _, row in self.df.iterrows():
-            order = Order(row['ID'], row['Name'],row['Birthday'], row['Email'], row['State'], row['ZipCode'])
+            order = Order(order_id=row['ID'], name=row['Name'], birthday=datetime.strptime(row['Birthday'], '%m/%d/%Y'), email=row['Email'], state=row['State'], zipcode=row['ZipCode'])
             if order.validate_order():
                 self.valid_orders.append(order)
             else:
                 self.invalid_orders.append(order)
-
     def write(self):
         with open('valid_orders.csv', 'w', newline='') as valid:
             writer = csv.writer(valid)
@@ -35,18 +71,26 @@ class Order:
         self.order_id = order_id
         self.user=User(name,birthday,email,state,zipcode)
     def validate_order(self):
-        return self.user.check_state() & self.user.check_zip() & self.user.val_weekday() & self.user.check_email() & self.user.calculateAge()
-
+        valid=(self.user.check_state() & self.user.check_zip() & self.user.val_weekday() & self.user.check_email() & self.user.calculateAge())
+        return valid
 
                 
 class User:
     def __init__(self,name, birthday, email, state, zipcode):
 
         self.name = name
-        self.birthday = birthday
+        self.birthday = self.parse_date(birthday)
         self.email = email
         self.state = state
         self.zipcode = zipcode
+
+    def parse_date(self, date_str):
+        if isinstance(date_str, str):
+            return datetime.strptime(date_str, '%m/%d/%Y').date()
+        elif isinstance(date_str, date):
+            return date_str
+        else:
+            raise ValueError("Invalid date format")
 
 #writing a function for : No wine can ship to New Jersey, Connecticut, Pennsylvania, Massachusetts, Illinois, Idaho or Oregon
     def check_state(self):
@@ -72,8 +116,8 @@ class User:
     #3) writing a function to return wine not sold to anyone born on the first Monday of the month.
 
     def val_weekday(self):
-        weekday=datetime.strptime(self.birthday, '%m/%d/%Y') #converting weekday to a datetime object and matching the date format
-        return weekday.weekday()!=0 or weekday.day>7
+        # weekday=datetime.strptime(self.birthday, '%m/%d/%Y') #converting weekday to a datetime object and matching the date format
+        return self.birthday.weekday()!=0 or self.birthday.day>7
     #returns true if the particular day is not the first monday(0) or day should be greater than 7.
 
 
@@ -87,10 +131,10 @@ class User:
 
     #21 years 
     def calculateAge(self):
-        birth=datetime.strptime(self.birthday, '%m/%d/%Y')
+        # birth=datetime.strptime(self.birthday, '%m/%d/%Y')
         today = date.today()
-        age = today.year - birth.year
-        if(today.month<birth.month or (today.month==birth.month and today.day<birth.day)):
+        age = today.year - self.birthday.year
+        if(today.month<self.birthday.month or (today.month==self.birthday.month and today.day<self.birthday.day)):
             '''to check if person's is birth month or date falls after the current month or date
             if birth year=2002 age will be considered as 21.
             if birthday is on 26th july 2023, present month=birth month and present date(25)<birth date(26)
@@ -102,3 +146,12 @@ if __name__ == '__main__':
     acmewines_order = AcmewinesOrder()
     acmewines_order.processfile()
     acmewines_order.write() 
+    # Connect to your MongoDB database
+    connect('OrderDb')
+
+    # Call the function to read the CSV and save to MongoDB
+
+    insertion= Insertion()
+    insertion.read_csv_and_save_to_mongodb()
+    update= Update_db()
+    update.update()
